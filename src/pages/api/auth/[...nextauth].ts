@@ -21,10 +21,19 @@ export default NextAuth({
       const { email } = user.user;
 
       try {
-        await fauna.query(q.Create(q.Collection("users"), { data: { email } }));
+        await fauna.query(
+          q.If(
+            q.Not(
+              q.Exists(q.Match(q.Index("user_by_email"), q.Casefold(email)))
+            ),
+            q.Create(q.Collection("users"), { data: { email } }),
+            q.Get(q.Match(q.Index("user_by_email"), q.Casefold(email)))
+          )
+        );
 
         return true;
-      } catch {
+      } catch (error) {
+        console.log(error);
         return false;
       }
     },
