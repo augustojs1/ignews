@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { Readable } from "stream";
 import Stripe from "stripe";
 import { stripe } from "../../services/stripe";
+import { SaveSubscription } from "./_lib/manageSubscription";
 
 // Os webhooks do Stripe não envia toda a informação por completo mas sim por partes através de uma "stream". Portanto, devemos fazer um código para fazer um parse dessas informações.
 async function buffer(readable: Readable) {
@@ -50,7 +51,25 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { type } = event;
 
     if (relevantEvents.has(type)) {
-      console.log("Evento recebido: ", event);
+      try {
+        switch (type) {
+          case "checkout.session.completed":
+            const checkoutSession = event.data
+              .object as Stripe.Checkout.Session;
+
+            await SaveSubscription(
+              checkoutSession.subscription.toString(),
+              checkoutSession.customer.toString()
+            );
+
+            break;
+          default:
+            throw new Error("Unhandled event.");
+        }
+      } catch (error) {
+        // sentry, bugsnag
+        return res.json({ error: "Webhook handler failed." });
+      }
     }
 
     res.status(200).json({ success: true });
