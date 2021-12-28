@@ -23,7 +23,11 @@ export const config = {
 };
 
 // Tipos de eventos relevantes para nossa aplicação
-const relevantEvents = new Set(["checkout.session.completed"]);
+const relevantEvents = new Set([
+  "checkout.session.completed",
+  "checkout.subscriptions.updated",
+  "checkout.subscriptions.deleted",
+]);
 
 // O caminho para a nossa api é localhost:3000/api/webhooks por isso criamos dentro de pages/api o arquivo webhooks.ts
 // src/pages/api/webhooks.ts => localhost:3000/api/webhooks
@@ -53,13 +57,28 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (relevantEvents.has(type)) {
       try {
         switch (type) {
+          case "customer.subscription.updated":
+          case "customer.subscription.deleted":
+            const subscription = event.data.object as Stripe.Subscription;
+
+            console.log("type-subscription", type);
+
+            await SaveSubscription(
+              subscription.id,
+              subscription.customer.toString(),
+              false
+            );
+
+            break;
+
           case "checkout.session.completed":
             const checkoutSession = event.data
               .object as Stripe.Checkout.Session;
 
             await SaveSubscription(
               checkoutSession.subscription.toString(),
-              checkoutSession.customer.toString()
+              checkoutSession.customer.toString(),
+              true
             );
 
             break;
