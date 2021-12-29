@@ -50,8 +50,14 @@ export const getServerSideProps: GetServerSideProps = async ({
   // Pegando o slug que a página dinâmica está recebendo. (params.slug)
   const { slug } = params;
 
-  // if(!session) {
-
+  // COnferindo se o usuário possui uma assinatura ativa e redireciona ele pra home caso não.
+  // if (!session.activeSubscription) {
+  //   return {
+  //     redirect: {
+  //       destination: "/",
+  //       permanent: false,
+  //     },
+  //   };
   // }
 
   const prismic = getPrismicClient(req);
