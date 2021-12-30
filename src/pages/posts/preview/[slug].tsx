@@ -1,7 +1,7 @@
 // Como a página da postagem a ser montada pelo servidor é dinâmica criamos um slug para receber esses dados do post e montar dinamicamente.
 // A rota para cá seria http://localhost:3000/posts/qualquer-coisa-apos-post
 // Isso redireciona para essa página.
-import { GetStaticProps } from "next";
+import { GetStaticPaths, GetStaticProps } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
@@ -52,10 +52,12 @@ export default function PostPreview({ post }: PostPreviewProps) {
   );
 }
 
-export const getStaticPaths = () => {
+// (SSG) - Podemos decidir se as páginas estáticas serão geradas em tempo de build ou geradas em a partir do primeiro acesso.
+export const getStaticPaths: GetStaticPaths = async () => {
   return {
+    // Passamos array vazia pois queremos que a página apenas seja gerada após o primeiro acesso.
     paths: [],
-    fallback: "blocking",
+    fallback: "blocking", // true, false ou blocking
   };
 };
 
@@ -86,5 +88,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       post,
     },
+    revalidate: 60 * 30, // 30 minutes
   };
 };
